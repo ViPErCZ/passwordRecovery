@@ -19,8 +19,8 @@ $ composer require sandbox/passwordrecovery
 ```
 
 
-Konfigurace
-------------
+Configuration
+-------------
 Then you have to register extension in config.neon.
 ```php
 extensions:
@@ -101,6 +101,7 @@ and template
 			{/if}
 	{/snippet}
 ```
+Extension using Nette\Localization\ITranslator and all configurated strings are translated.
 
 -----
 
