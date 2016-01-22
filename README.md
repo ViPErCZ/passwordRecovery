@@ -1,5 +1,4 @@
-# passwordRecovery
-Password recovery for Nette Framework
+#Password recovery for Nette Framework
 ======
 
 Requirements
