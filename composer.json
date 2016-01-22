@@ -1,0 +1,22 @@
+{
+  "name": "sandbox/passwordrecovery",
+  "description": "Password recovery Nette extension.",
+  "homepage": "http://vipersoftware.net",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Martin Chudoba",
+      "email": "info@vipersoftware.net",
+      "homepage": "http://vipersoftware.net"
+    }
+  ],
+  "require": {
+    "php": ">= 5.4.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "passwordRecovery\\": "src/"
+    }
+  }
+}
