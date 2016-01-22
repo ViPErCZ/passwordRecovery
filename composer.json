@@ -16,7 +16,7 @@
   },
   "autoload": {
     "psr-4": {
-      "passwordRecovery\\": "src/"
+      "sandbox\\passwordrecovery\\": "src/"
     }
   }
 }
