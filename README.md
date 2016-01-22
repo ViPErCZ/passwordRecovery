@@ -1,0 +1,2 @@
+# passwordRecovery
+PasswordRecovery Nette extension
