@@ -1,9 +1,6 @@
 # passwordRecovery
-PasswordRecovery Nette extension
-======
-
 Password recovery for Nette Framework
-
+======
 
 Requirements
 ------------
@@ -25,8 +22,6 @@ $ composer require sandbox/passwordrecovery
 
 Documentation
 ------------
-
-Learn how to authenticate the user using Facebook oauth or call Facebook's graph api in [documentation](https://github.com/Kdyby/Facebook/blob/master/docs/en/index.md).
 
 
 
