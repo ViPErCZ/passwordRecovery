@@ -13,6 +13,7 @@ use Nette\Localization\ITranslator;
 use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
 use Nette\Mail\SmtpMailer;
+use Nette\Utils\Callback;
 use Nette\Utils\Random;
 
 /**
@@ -46,6 +47,9 @@ class PasswordRecovery {
 	/** @var string */
 	protected $templatePath;
 
+	/** @var callable */
+	protected $passwordGenerator;
+
 	/** @var ITranslator */
 	protected $translator;
 
@@ -59,6 +63,7 @@ class PasswordRecovery {
 		$this->sender = $sender;
 		$this->subject = $subject;
 		$this->smtp = null;
+		$this->passwordGenerator = null;
 		$this->userRepository = $userRepository;
 	}
 
@@ -105,6 +110,13 @@ class PasswordRecovery {
 	}
 
 	/**
+	 * @param callable $passwordGenerator
+	 */
+	public function setPasswordGenerator(callable $passwordGenerator) {
+		$this->passwordGenerator = $passwordGenerator;
+	}
+
+	/**
 	 * @return Form
 	 */
 	public function createForm() {
@@ -118,7 +130,12 @@ class PasswordRecovery {
 
 		$email = $this->sender;
 		$form->onSuccess[] = function(Form $form) use ($email) {
-			$newPassword = Random::generate();
+			if ($this->passwordGenerator) {
+				$callback = new Callback();
+				$newPassword = $callback->invoke($this->passwordGenerator);
+			} else {
+				$newPassword = Random::generate();
+			}
 			$email = $form->getValues()['email'];
 			if ($this->saveNewPassword($email, $newPassword)) {
 				try {
