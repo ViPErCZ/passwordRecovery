@@ -1,4 +1,4 @@
-#Password recovery for Nette Framework
+#Password recovery extension for Nette Framework
 ======
 
 Requirements
@@ -36,6 +36,8 @@ passwordRecovery:
     errorMessage: "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu."
     smtp: [127.0.0.1, info@domain.tld, password]
 ```
+Next, you need to register a service that implements an interface IUserModel.
+Example is sandbox project: [https://github.com/ViPErCZ/sandbox](https://github.com/ViPErCZ/sandbox)
 
 Usage
 ------------
