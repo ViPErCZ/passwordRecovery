@@ -26,7 +26,7 @@ Then you have to register extension in config.neon.
 extensions:
     passwordRecovery: Sandbox\PasswordRecovery\DI\PasswordRecoveryExtension
 ```
-and configuration section in config.neon.
+and configuration section in config.neon (version 1.0.x):
 ```php
 passwordRecovery:
     sender: "sandbox@domain.net"
@@ -36,12 +36,28 @@ passwordRecovery:
     errorMessage: "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu."
     smtp: [127.0.0.1, info@domain.tld, password]
 ```
+and configuration section in config.neon (version 1.1.x):
+```php
+passwordRecovery:
+    passwordRecovery:
+    sender: "sandbox@techart.cz"
+    subject: "Obnova hesla"
+    submitButton: "Obnovit heslo"
+    validatorMessage: "Prosím vložte validní heslo."
+    equalPasswordMessage: "Hesla se musí shodovat."
+    emptyPasswordMessage: "Heslo musí obsahovat alespoň %d znaků"
+    minimalPasswordLength: 6
+    expirationTime: 45 #minute, max 59
+    errorMessage: "Odkaz pro obnovu hesla se nepodařilo odeslat. Zkuste to prosím znovu."
+    smtp: [127.0.0.1, info@domain.tld, password]
+```
+
 Next, you need to register a service that implements an interface IUserModel.
 Example is sandbox project: [https://github.com/ViPErCZ/sandbox](https://github.com/ViPErCZ/sandbox)
 
 Usage
 ------------
-Sample using in Presener
+Sample using in Presener (version 1.0.x):
 ```php
 use Nette\Application\UI\Form;
 use Sandbox\PasswordRecovery\PasswordRecovery;
@@ -81,7 +97,35 @@ class PassRestorePresenter {
 	}
 }
 ```
-and template
+or version 1.1.x
+```php
+/**
+ * @return \Nette\Application\UI\Form
+*/
+protected function createComponentRecovery() {
+	$control = $this->passwordRecovery->createDialog();
+	$control->getResetForm()->onSuccess[] = function(Form $form) {
+		$this->flashMessage('Odkaz pro obnovu hesla byl odeslán na Váš email ' . $form->getValues()['email'] . ".");
+		$this->redrawControl('recoveryForm');
+	};
+
+	$control->getResetForm()->onError[] = function() {
+		$this->redrawControl('recoveryForm');
+	};
+
+	$control->getNewPasswordForm()->onSuccess[] = function() {
+		$this->flashMessage('Heslo bylo úspěšně nastaveno. Pokračujte na přihlašovací obrazovku.');
+		$this->redrawControl('recoveryForm');
+	};
+
+	$control->getNewPasswordForm()->onError[] = function() {
+		$this->redrawControl('recoveryForm');
+	};
+
+	return $control;
+}
+```
+and template (version 1.0.x)
 ```php
 {snippet recoveryForm}
 		<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
@@ -102,6 +146,15 @@ and template
 				{/form}
 			{/if}
 	{/snippet}
+```
+and template in version 1.1.x has default template (using twitter bootstrap class)
+```php
+{snippet recoveryForm}
+	<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
+	{if count($flashes) == 0}
+		{control recovery}
+	{/if}
+{/snippet}
 ```
 Extension using Nette\Localization\ITranslator and all configurated strings are translated.
 
