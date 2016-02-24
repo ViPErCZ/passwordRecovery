@@ -147,7 +147,7 @@ and template (version 1.0.x)
 			{/if}
 	{/snippet}
 ```
-and template in version 1.1.x has default template (using twitter bootstrap class styling)
+and template in version 1.1.x has default template (using twitter bootstrap class)
 ```php
 {snippet recoveryForm}
 	<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
