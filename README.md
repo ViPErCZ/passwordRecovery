@@ -40,7 +40,7 @@ and configuration section in config.neon (version 1.1.x):
 ```php
 passwordRecovery:
     passwordRecovery:
-    sender: "sandbox@techart.cz"
+    sender: "sandbox@domain.net"
     subject: "Obnova hesla"
     submitButton: "Obnovit heslo"
     validatorMessage: "Prosím vložte validní heslo."
