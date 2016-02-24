@@ -1,0 +1,37 @@
+{if $control->token && $control->isTokenValid()}
+	{form newPasswordForm}
+	{if $form->hasErrors()}
+		<div n:foreach="$form->errors as $error" class="alert alert-danger">{$error}</div>
+	{/if}
+		<div class="row form-group">
+			<div class="col-xs-12">
+				{label pass1 /}
+				{input pass1 class => "form-control", placeholder => "Heslo..."}
+			</div>
+		</div>
+		<div class="row form-group">
+			<div class="col-xs-12">
+				{label pass2 /}
+				{input pass2 class => "form-control", placeholder => "Heslo pro kontrolu..."}
+			</div>
+		</div>
+		<div class="row form-group col-lg-10">
+			{input recover class => "btn btn-success"}
+		</div>
+	{/form}
+{else}
+	{form resetForm role => "form"}
+	{if $form->hasErrors()}
+		<div n:foreach="$form->errors as $error" class="alert alert-danger">{$error}</div>
+	{/if}
+		<div class="row form-group">
+			<div class="col-xs-12">
+				{label email /}
+				{input email class => "form-control", placeholder => "Email..."}
+			</div>
+		</div>
+		<div class="row form-group col-lg-10">
+			{input recover class => "btn btn-success"}
+		</div>
+	{/form}
+{/if}

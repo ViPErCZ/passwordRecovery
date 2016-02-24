@@ -7,14 +7,8 @@
  */
 
 namespace Sandbox\PasswordRecovery;
-use Latte\Engine;
-use Nette\Application\UI\Form;
+use Nette\Http\IRequest;
 use Nette\Localization\ITranslator;
-use Nette\Mail\Message;
-use Nette\Mail\SendmailMailer;
-use Nette\Mail\SmtpMailer;
-use Nette\Utils\Callback;
-use Nette\Utils\Random;
 
 /**
  * Class PasswordRecovery
@@ -39,6 +33,18 @@ class PasswordRecovery {
 	protected $validatorMessage;
 
 	/** @var string */
+	protected $equalPasswordMessage;
+
+	/** @var string */
+	protected $emptyPasswordMessage;
+
+	/** @var integer */
+	protected $minimalPasswordLength;
+
+	/** @var integer */
+	protected $expirationTime;
+
+	/** @var string */
 	protected $submitButton;
 
 	/** @var string */
@@ -47,24 +53,85 @@ class PasswordRecovery {
 	/** @var string */
 	protected $templatePath;
 
-	/** @var callable */
-	protected $passwordGenerator;
-
 	/** @var ITranslator */
 	protected $translator;
+
+	/** @var IRequest */
+	protected $httpRequest;
 
 	/**
 	 * PasswordRecovery constructor.
 	 * @param $sender
 	 * @param $subject
 	 * @param IUserModel $userRepository
+	 * @param IRequest $httpRequest
 	 */
-	public function __construct($sender, $subject, IUserModel $userRepository) {
+	public function __construct($sender, $subject, IUserModel $userRepository, IRequest $httpRequest) {
 		$this->sender = $sender;
 		$this->subject = $subject;
 		$this->smtp = null;
 		$this->passwordGenerator = null;
 		$this->userRepository = $userRepository;
+		$this->httpRequest = $httpRequest;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEmptyPasswordMessage() {
+		return $this->emptyPasswordMessage;
+	}
+
+	/**
+	 * @param string $emptyPasswordMessage
+	 */
+	public function setEmptyPasswordMessage($emptyPasswordMessage) {
+		$this->emptyPasswordMessage = $emptyPasswordMessage;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getMinimalPasswordLength() {
+		return intval($this->minimalPasswordLength);
+	}
+
+	/**
+	 * @param int $minimalPasswordLength
+	 */
+	public function setMinimalPasswordLength($minimalPasswordLength) {
+		$this->minimalPasswordLength = intval($minimalPasswordLength);
+	}
+
+	/**
+	 * @return int
+	 */
+	public function getExpirationTime() {
+		return $this->expirationTime;
+	}
+
+	/**
+	 * @param int $expirationTime
+	 */
+	public function setExpirationTime($expirationTime) {
+		if ($expirationTime > 59) {
+			$expirationTime = 59;
+		}
+		$this->expirationTime = $expirationTime;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getEqualPasswordMessage() {
+		return $this->equalPasswordMessage;
+	}
+
+	/**
+	 * @param string $equalPasswordMessage
+	 */
+	public function setEqualPasswordMessage($equalPasswordMessage) {
+		$this->equalPasswordMessage = $equalPasswordMessage;
 	}
 
 	/**
@@ -110,45 +177,10 @@ class PasswordRecovery {
 	}
 
 	/**
-	 * @param callable $passwordGenerator
+	 * @return ResetFormDialog
 	 */
-	public function setPasswordGenerator(callable $passwordGenerator) {
-		$this->passwordGenerator = $passwordGenerator;
-	}
-
-	/**
-	 * @return Form
-	 */
-	public function createForm() {
-		$form = new Form();
-
-		$form->getElementPrototype()->class = "ajax";
-		$form->addText("email", "Email:")->setAttribute("placeholder", "Email...")
-			->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
-			->isRequired();
-		$form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
-
-		$email = $this->sender;
-		$form->onSuccess[] = function(Form $form) use ($email) {
-			if ($this->passwordGenerator) {
-				$callback = new Callback();
-				$newPassword = $callback->invoke($this->passwordGenerator);
-			} else {
-				$newPassword = Random::generate();
-			}
-			$email = $form->getValues()['email'];
-			if ($this->saveNewPassword($email, $newPassword)) {
-				try {
-					$this->sendNewPasswordToEmail($email, $newPassword);
-				} catch (\Exception $e) {
-					$form->addError($e->getMessage());
-				}
-			} else {
-				$form->addError($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
-			}
-		};
-
-		return $form;
+	public function createDialog() {
+		return new ResetFormDialog($this);
 	}
 
 	/**
@@ -161,39 +193,80 @@ class PasswordRecovery {
 	}
 
 	/**
-	 * @param $email
-	 * @param $newPassword
-	 * @throws \Exception
-	 * @throws \Throwable
+	 * @return string
 	 */
-	protected function sendNewPasswordToEmail($email, $newPassword) {
-		$message = new Message();
-		$message->setFrom($this->sender);
-		$message->setSubject($this->subject);
-		$message->addTo($email);
+	public function getSender() {
+		return $this->sender;
+	}
 
-		if (is_file($this->templatePath)) {
-			$latte = new Engine();
-			$params = array(
-				'newPassword' => $newPassword
-			);
-			$message->setHtmlBody($latte->renderToString($this->templatePath, $params));
-		} else {
-			$message->setBody("Nové heslo: " . $newPassword);
-		}
+	/**
+	 * @return string
+	 */
+	public function getSubject() {
+		return $this->subject;
+	}
 
-		if ($this->smtp) {
-			$mailer = new SmtpMailer(array(
-				'host' => $this->smtp[0],
-				'username' => $this->smtp[1],
-				'password' => $this->smtp[2],
-				'secure' => isset($this->smtp[3]) ? $this->smtp[3] : '',
-			));
-			$mailer->send($message);
-		} else {
-			$mailer = new SendmailMailer();
-			$mailer->send($message);
-		}
+	/**
+	 * @return array|null
+	 */
+	public function getSmtp() {
+		return $this->smtp;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getValidatorMessage() {
+		return $this->validatorMessage;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getSubmitButton() {
+		return $this->submitButton;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getErrorMessage() {
+		return $this->errorMessage;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getTemplatePath() {
+		return $this->templatePath;
+	}
+
+	/**
+	 * @return ITranslator
+	 */
+	public function getTranslator() {
+		return $this->translator;
+	}
+
+	/**
+	 * @return callable
+	 */
+	public function getPasswordGenerator() {
+		return $this->passwordGenerator;
+	}
+
+	/**
+	 * @return IUserModel
+	 */
+	public function getUserRepository() {
+		return $this->userRepository;
+	}
+
+	/**
+	 * @return IRequest
+	 */
+	public function getHttpRequest() {
+		return $this->httpRequest;
 	}
 
 }

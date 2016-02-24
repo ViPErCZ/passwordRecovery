@@ -22,13 +22,17 @@ class PasswordRecoveryExtension extends CompilerExtension {
 
 	/** @var array */
 	public $defaults = array(
-		"sender" 			=> null,
-		"subject"			=> null,
-		"smtp"				=> null,
-		"templatePath"		=> null,
-		"validatorMessage"	=> "Prosím vložte validní heslo.",
-		"submitButton"		=> "Obnovit heslo",
-		"errorMessage"		=> "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu."
+		"sender" 				=> null,
+		"subject"				=> null,
+		"smtp"					=> null,
+		"templatePath"			=> null,
+		"validatorMessage"		=> "Prosím vložte validní heslo.",
+		"submitButton"			=> "Obnovit heslo",
+		"errorMessage"			=> "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu.",
+		"equalPasswordMessage"	=> "Hesla se musí shodovat.",
+		"emptyPasswordMessage"	=> "Heslo musí osabhovat alespoň %d znaků",
+		"minimalPasswordLength"	=> 6,
+		"expirationTime"		=> 10
 	);
 
 	/**
@@ -47,6 +51,10 @@ class PasswordRecoveryExtension extends CompilerExtension {
 			->addSetup('$service->setValidatorMessage(?)', array($config['validatorMessage']))
 			->addSetup('$service->setSubmitButton(?)', array($config['submitButton']))
 			->addSetup('$service->setErrorMessage(?)', array($config['errorMessage']))
+			->addSetup('$service->setEqualPasswordMessage(?)', array($config['equalPasswordMessage']))
+			->addSetup('$service->setEmptyPasswordMessage(?)', array($config['emptyPasswordMessage']))
+			->addSetup('$service->setMinimalPasswordLength(?)', array($config['minimalPasswordLength']))
+			->addSetup('$service->setExpirationTime(?)', array($config['expirationTime']))
 			->setInject(false);
 
 		if (isset($config['smtp']) && is_array($config['smtp'])) {

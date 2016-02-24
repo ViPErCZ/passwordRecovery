@@ -14,5 +14,7 @@ namespace Sandbox\PasswordRecovery;
  */
 interface IUserModel {
 	public function isUserValid($email);
-	public function resetPassword($email, $newPassword);
+	public function isTokenValid($token, $expirationTime);
+	public function saveToken($email, $token);
+	public function resetPassword($token, $newPassword);
 }
