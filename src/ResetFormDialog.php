@@ -169,7 +169,7 @@ class ResetFormDialog extends Control {
 		$form->getElementPrototype()->class = "ajax";
 		$form->addText("email", "Email:")->setAttribute("placeholder", "Email...")
 			->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
-			->isRequired();
+			->setRequired(true);
 		$form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
 
 		$form->onSuccess[] = function(Form $form) {
