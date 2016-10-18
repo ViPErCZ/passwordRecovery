@@ -200,6 +200,7 @@ class ResetFormDialog extends Control {
 			->setRequired($this->translator ? $this->translator->translate($required) : $required)
 			->addRule(Form::MIN_LENGTH, $this->translator ? $this->translator->translate($required) : $required, $this->passwordRecovery->getMinimalPasswordLength());
 		$form->addPassword("pass2", $this->translator ? $this->translator->translate("Heslo pro kontrolu") : "Heslo pro kontrolu:")
+			->setRequired(true)
 			->addRule(Form::EQUAL
 				, $this->translator ? $this->translator->translate($this->passwordRecovery->getEqualPasswordMessage()) : $this->passwordRecovery->getEqualPasswordMessage()
 				, $form['pass1']);
