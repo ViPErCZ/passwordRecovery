@@ -57,7 +57,7 @@ Example is sandbox project: [https://github.com/ViPErCZ/sandbox](https://github.
 
 Usage
 ------------
-Sample using in Presener (version 1.0.x):
+Sample using in Presenter (version 1.0.x):
 ```php
 use Nette\Application\UI\Form;
 use Sandbox\PasswordRecovery\PasswordRecovery;
