@@ -57,7 +57,8 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->addSetup('$service->setEqualPasswordMessage(?)', [$config['equalPasswordMessage']])
             ->addSetup('$service->setEmptyPasswordMessage(?)', [$config['emptyPasswordMessage']])
             ->addSetup('$service->setMinimalPasswordLength(?)', [$config['minimalPasswordLength']])
-            ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']]);
+            ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
+            ->setFactory(PasswordRecovery::class);
 
         if (isset($config['smtp']) && is_array($config['smtp'])) {
             $passwordRecovery->addSetup('$service->setSmtp(?)', [$config['smtp']]);
