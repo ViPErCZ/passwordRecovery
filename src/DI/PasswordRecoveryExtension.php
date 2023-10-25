@@ -32,7 +32,7 @@ class PasswordRecoveryExtension extends CompilerExtension
                 'email'      => Expect::string()->required(),
                 'password'   => Expect::string()->required(),
                 'encryption' => Expect::string(),
-            ])->required(),
+            ]),
             'templatePath'          => Expect::string(),
             'validatorMessage'      => Expect::string()->required()->default('Prosím vložte validní heslo.'),
             'submitButton'          => Expect::string()->required()->default('Obnovit heslo'),
