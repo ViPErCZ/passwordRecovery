@@ -62,7 +62,7 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
             ->setAutowired();
 
-        if (isset($config['smtp']) && is_array($config['smtp'])) {
+        if (isset($config['smtp']) && is_object($config['smtp'])) {
             $smtp = new Smtp($config['smtp']['host'], $config['smtp']['email'], $config['smtp']['password']);
             $passwordRecovery->addSetup('$service->setSmtp(?)', [$smtp]);
         }
