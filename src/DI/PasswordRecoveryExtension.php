@@ -20,13 +20,15 @@ use Sandbox\PasswordRecovery\PasswordRecovery;
  */
 class PasswordRecoveryExtension extends CompilerExtension
 {
+    private const PASSWORD_RECOVERY = 'passwordRecovery';
+
     public function getConfigSchema(): Schema
     {
         return Expect::structure([
             'sender'                => Expect::string()->required(),
             'subject'               => Expect::string()->required(),
             'smtp'                  => Expect::array()->required(),
-            'templatePath'          => Expect::string()->required(),
+            'templatePath'          => Expect::string(),
             'validatorMessage'      => Expect::string()->required()->default('Prosím vložte validní heslo.'),
             'submitButton'          => Expect::string()->required()->default('Obnovit heslo'),
             'errorMessage'          => Expect::string()->required()->default('Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu.'),
@@ -37,19 +39,14 @@ class PasswordRecoveryExtension extends CompilerExtension
         ]);
     }
 
-    /**
-     * @throws \Nette\Utils\AssertionException
-     */
     public function loadConfiguration(): void
     {
         $builder = $this->getContainerBuilder();
         $config = $this->getConfig();
 
-        Validators::assert($config['sender'], 'string', 'Password recovery sender email');
-        Validators::assert($config['subject'], 'string', 'Password recovery subject email');
-
-        $passwordRecovery = $builder->addDefinition($this->prefix('passwordRecovery'))
+        $passwordRecovery = $builder->addDefinition($this->prefix(self::PASSWORD_RECOVERY))
             ->setType(PasswordRecovery::class)
+            ->setFactory(PasswordRecovery::class)
             ->setArguments([$config['sender'], $config['subject']])
             ->addSetup('$service->setValidatorMessage(?)', [$config['validatorMessage']])
             ->addSetup('$service->setSubmitButton(?)', [$config['submitButton']])
@@ -58,7 +55,7 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->addSetup('$service->setEmptyPasswordMessage(?)', [$config['emptyPasswordMessage']])
             ->addSetup('$service->setMinimalPasswordLength(?)', [$config['minimalPasswordLength']])
             ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
-            ->setFactory(PasswordRecovery::class);
+            ->setAutowired();
 
         if (isset($config['smtp']) && is_array($config['smtp'])) {
             $passwordRecovery->addSetup('$service->setSmtp(?)', [$config['smtp']]);
@@ -75,7 +72,7 @@ class PasswordRecoveryExtension extends CompilerExtension
 
         $translator = $container->getByType(Translator::class);
         /** @var ServiceDefinition $passwordRecovery */
-        $passwordRecovery = $container->getDefinition($this->prefix('passwordRecovery'));
+        $passwordRecovery = $container->getDefinition($this->prefix(self::PASSWORD_RECOVERY));
 
         if ($translator) {
             $passwordRecovery->addSetup('$service->setTranslator(?)', ['@' . $translator]);

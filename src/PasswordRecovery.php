@@ -50,8 +50,7 @@ class PasswordRecovery {
 	/** @var string */
 	protected $errorMessage;
 
-	/** @var string */
-	protected $templatePath;
+	protected string|null $templatePath;
 
 	/** @var ITranslator */
 	protected $translator;
@@ -172,7 +171,7 @@ class PasswordRecovery {
 	/**
 	 * @param string $templatePath
 	 */
-	public function setTemplatePath($templatePath) {
+	public function setTemplatePath(string $templatePath) {
 		$this->templatePath = $templatePath;
 	}
 
@@ -234,10 +233,7 @@ class PasswordRecovery {
 		return $this->errorMessage;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getTemplatePath() {
+	public function getTemplatePath(): ?string {
 		return $this->templatePath;
 	}
 
