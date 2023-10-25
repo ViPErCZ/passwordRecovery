@@ -16,11 +16,9 @@ use Sandbox\PasswordRecovery\DTO\Smtp;
  */
 class PasswordRecovery
 {
-
-    protected UserModelInterface $userRepository;
-    protected string $sender;
-    protected string $subject;
     protected Smtp|null $smtp = null;
+    protected Translator|null $translator = null;
+    protected Closure|null $passwordGenerator = null;
     protected string $validatorMessage;
     protected string $equalPasswordMessage;
     protected string $emptyPasswordMessage;
@@ -29,22 +27,13 @@ class PasswordRecovery
     protected string $submitButton;
     protected string $errorMessage;
     protected string|null $templatePath = null;
-    protected Translator|null $translator = null;
-    protected IRequest $httpRequest;
-    protected Closure|null $passwordGenerator;
 
     public function __construct(
-        string $sender,
-        string $subject,
-        UserModelInterface $userRepository,
-        IRequest $httpRequest
+        protected string $sender,
+        protected string $subject,
+        protected UserModelInterface $userRepository,
+        protected IRequest $httpRequest
     ) {
-        $this->sender = $sender;
-        $this->subject = $subject;
-        $this->smtp = null;
-        $this->passwordGenerator = null;
-        $this->userRepository = $userRepository;
-        $this->httpRequest = $httpRequest;
     }
 
     public function getEmptyPasswordMessage(): string

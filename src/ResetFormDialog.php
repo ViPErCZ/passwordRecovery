@@ -134,7 +134,6 @@ class ResetFormDialog extends Control
             } else {
                 $form->addError($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
             }
-
         };
 
         return $form;
