@@ -20,7 +20,7 @@ class PasswordRecovery
     protected UserModelInterface $userRepository;
     protected string $sender;
     protected string $subject;
-    protected array|null $smtp = null;
+    protected Smtp|null $smtp = null;
     protected string $validatorMessage;
     protected string $equalPasswordMessage;
     protected string $emptyPasswordMessage;
