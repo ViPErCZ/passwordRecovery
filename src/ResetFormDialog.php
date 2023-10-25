@@ -27,7 +27,7 @@ class ResetFormDialog extends Control {
 	/** @var PasswordRecovery */
 	protected $passwordRecovery;
 
-	/** @var IUserModel */
+	/** @var UserModelInterface */
 	protected $userRepository;
 
 	/** @var string */
