@@ -75,12 +75,12 @@ class ResetFormDialog extends Control
             $message->setBody("Odkaz pro reset hesla: " . $this->generateResetUrl($email));
         }
 
-        $mailer = $this->smtp ? new SmtpMailer([
-            'host'     => $this->smtp->host,
-            'username' => $this->smtp->email,
-            'password' => $this->smtp->password,
-            'secure'   => $this->smtp->encryption,
-        ]) : new SendmailMailer();
+        $mailer = $this->smtp ? new SmtpMailer(
+            $this->smtp->host,
+            $this->smtp->email,
+            $this->smtp->password,
+            $this->smtp->encryption
+        ) : new SendmailMailer();
         $mailer->send($message);
     }
 
