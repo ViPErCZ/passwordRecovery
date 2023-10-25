@@ -6,6 +6,7 @@ namespace Sandbox\PasswordRecovery;
 
 use Nette\Http\IRequest;
 use Nette\Localization\Translator;
+use Sandbox\PasswordRecovery\DTO\Smtp;
 
 /**
  * Class PasswordRecovery
@@ -109,7 +110,7 @@ class PasswordRecovery
         $this->translator = $translator;
     }
 
-    public function setSmtp(array $smtp): void
+    public function setSmtp(Smtp $smtp): void
     {
         $this->smtp = $smtp;
     }
@@ -139,7 +140,7 @@ class PasswordRecovery
         return $this->subject;
     }
 
-    public function getSmtp(): ?array
+    public function getSmtp(): ?Smtp
     {
         return $this->smtp;
     }

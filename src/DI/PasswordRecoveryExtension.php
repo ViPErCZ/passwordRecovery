@@ -9,6 +9,7 @@ use Nette\DI\CompilerExtension;
 use Nette\Localization\Translator;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
+use Sandbox\PasswordRecovery\DTO\Smtp;
 use Sandbox\PasswordRecovery\PasswordRecovery;
 
 /**
@@ -26,7 +27,12 @@ class PasswordRecoveryExtension extends CompilerExtension
         return Expect::structure([
             'sender'                => Expect::string()->required(),
             'subject'               => Expect::string()->required(),
-            'smtp'                  => Expect::array()->required(),
+            'smtp'                  => Expect::structure([
+                'host'       => Expect::string()->required(),
+                'email'      => Expect::string()->required(),
+                'password'   => Expect::string()->required(),
+                'encryption' => Expect::string(),
+            ])->required(),
             'templatePath'          => Expect::string(),
             'validatorMessage'      => Expect::string()->required()->default('Prosím vložte validní heslo.'),
             'submitButton'          => Expect::string()->required()->default('Obnovit heslo'),
@@ -57,7 +63,8 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->setAutowired();
 
         if (isset($config['smtp']) && is_array($config['smtp'])) {
-            $passwordRecovery->addSetup('$service->setSmtp(?)', [$config['smtp']]);
+            $smtp = new Smtp($config['smtp']['host'], $config['smtp']['email'], $config['smtp']['password']);
+            $passwordRecovery->addSetup('$service->setSmtp(?)', [$smtp]);
         }
 
         if (isset($config['templatePath']) && is_array($config['templatePath'])) {
