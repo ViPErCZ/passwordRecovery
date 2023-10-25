@@ -42,7 +42,7 @@ class PasswordRecoveryExtension extends CompilerExtension
     public function loadConfiguration(): void
     {
         $builder = $this->getContainerBuilder();
-        $config = $this->getConfig();
+        $config = (array)$this->getConfig();
 
         $passwordRecovery = $builder->addDefinition($this->prefix(self::PASSWORD_RECOVERY))
             ->setType(PasswordRecovery::class)
