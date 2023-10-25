@@ -97,7 +97,7 @@ class PassRestorePresenter {
 	}
 }
 ```
-or version 1.1.x
+or version 1.1.x and high
 ```php
 /**
  * @return \Nette\Application\UI\Form
@@ -115,11 +115,19 @@ protected function createComponentRecovery() {
 
 	$control->getNewPasswordForm()->onSuccess[] = function() {
 		$this->flashMessage('Heslo bylo úspěšně nastaveno. Pokračujte na přihlašovací obrazovku.');
-		$this->redrawControl('recoveryForm');
+		if ($this->isAjax()) {
+           $this->redrawControl('recoveryForm');
+        } else {
+           $this->redirect('Home:default');
+        }
 	};
 
 	$control->getNewPasswordForm()->onError[] = function() {
-		$this->redrawControl('recoveryForm');
+		if ($this->isAjax()) {
+           $this->redrawControl('recoveryForm');
+        } else {
+           $this->redirect('Home:default');
+        }
 	};
 
 	return $control;
@@ -147,7 +155,7 @@ and template (version 1.0.x)
 			{/if}
 	{/snippet}
 ```
-and template in version 1.1.x has default template (using twitter bootstrap class)
+and template in version 1.1.x and high has default template (using twitter bootstrap class)
 ```php
 {snippet recoveryForm}
 	<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
@@ -156,7 +164,7 @@ and template in version 1.1.x has default template (using twitter bootstrap clas
 	{/if}
 {/snippet}
 ```
-Extension using Nette\Localization\ITranslator and all configurated strings are translated.
+Extension using Nette\Localization\Translator and all configurated strings are translated.
 
 -----
 

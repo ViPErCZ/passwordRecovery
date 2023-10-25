@@ -12,7 +12,8 @@ use Nette\Mail\Message;
 use Nette\Mail\SendmailMailer;
 use Nette\Mail\SmtpMailer;
 use Nette\Utils\Random;
-use \Sandbox\PasswordRecovery\DTO\Smtp;
+use Nette\Application\Attributes\Persistent;
+use Sandbox\PasswordRecovery\DTO\Smtp;
 
 /**
  * Class ResetFormDialog
@@ -22,46 +23,22 @@ use \Sandbox\PasswordRecovery\DTO\Smtp;
  */
 class ResetFormDialog extends Control
 {
+    protected UserModelInterface $userRepository;
+    protected string $sender;
+    protected string $subject;
+    protected Smtp|null $smtp = null;
+    protected string $validatorMessage;
+    protected string $submitButton;
+    protected string $errorMessage;
+    protected string|null $templatePath = null;
+    protected Translator|null $translator = null;
 
-    /** @var PasswordRecovery */
-    protected $passwordRecovery;
+    #[Persistent]
+    public string $token;
 
-    /** @var UserModelInterface */
-    protected $userRepository;
-
-    /** @var string */
-    protected $sender;
-
-    /** @var string */
-    protected $subject;
-
-    /** @var null|Smtp */
-    protected $smtp;
-
-    /** @var string */
-    protected $validatorMessage;
-
-    /** @var string */
-    protected $submitButton;
-
-    /** @var string */
-    protected $errorMessage;
-
-    /** @var string */
-    protected $templatePath;
-
-    /** @var Translator */
-    protected $translator;
-
-    /**
-     * @var string
-     * @persistent
-     */
-    public $token;
-
-    public function __construct(PasswordRecovery $passwordRecovery)
-    {
-        $this->passwordRecovery = $passwordRecovery;
+    public function __construct(
+        protected readonly PasswordRecovery $passwordRecovery
+    ) {
         $this->translator = $passwordRecovery->getTranslator();
         $this->validatorMessage = $passwordRecovery->getValidatorMessage();
         $this->submitButton = $passwordRecovery->getSubmitButton();
