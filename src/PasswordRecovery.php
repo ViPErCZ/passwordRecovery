@@ -28,7 +28,7 @@ class PasswordRecovery
     protected string $submitButton;
     protected string $errorMessage;
     protected string|null $templatePath;
-    protected Translator $translator;
+    protected Translator|null $translator;
     protected IRequest $httpRequest;
     protected Closure|null $passwordGenerator;
 
@@ -226,17 +226,11 @@ class PasswordRecovery
         return $this->templatePath;
     }
 
-    /**
-     * @return ITranslator
-     */
-    public function getTranslator()
+    public function getTranslator(): ?Translator
     {
         return $this->translator;
     }
 
-    /**
-     * @return callable
-     */
     public function getPasswordGenerator()
     {
         return $this->passwordGenerator;
