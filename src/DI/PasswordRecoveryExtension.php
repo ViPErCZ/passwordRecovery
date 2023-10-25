@@ -63,11 +63,11 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->setAutowired();
 
         if (isset($config['smtp']) && is_object($config['smtp'])) {
-            $smtp = new Smtp($config['smtp']['host'], $config['smtp']['email'], $config['smtp']['password']);
+            $smtp = new Smtp($config['smtp']->host, $config['smtp']->email, $config['smtp']->password);
             $passwordRecovery->addSetup('$service->setSmtp(?)', [$smtp]);
         }
 
-        if (isset($config['templatePath']) && is_array($config['templatePath'])) {
+        if (isset($config['templatePath'])) {
             $passwordRecovery->addSetup('$service->setTemplatePath(?)', [$config['templatePath']]);
         }
     }
