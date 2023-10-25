@@ -34,7 +34,7 @@ class ResetFormDialog extends Control
     protected Translator|null $translator = null;
 
     #[Persistent]
-    public string $token;
+    public string $token = '';
 
     public function __construct(
         protected readonly PasswordRecovery $passwordRecovery
