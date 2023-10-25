@@ -182,9 +182,10 @@ class ResetFormDialog extends Control
         $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
 
         $form->onSuccess[] = function (Form $form) {
-            $result = $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
-            if ($result !== true) {
-                $form->addError($result);
+            try {
+                $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
+            } catch (\Exception $exception) {
+                $form->addError($exception->getMessage());
             }
         };
 
