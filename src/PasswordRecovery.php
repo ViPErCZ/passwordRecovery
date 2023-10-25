@@ -19,7 +19,7 @@ class PasswordRecovery
     protected UserModelInterface $userRepository;
     protected string $sender;
     protected string $subject;
-    protected array|null $smtp;
+    protected array|null $smtp = null;
     protected string $validatorMessage;
     protected string $equalPasswordMessage;
     protected string $emptyPasswordMessage;
@@ -27,8 +27,8 @@ class PasswordRecovery
     protected int $expirationTime;
     protected string $submitButton;
     protected string $errorMessage;
-    protected string|null $templatePath;
-    protected Translator|null $translator;
+    protected string|null $templatePath = null;
+    protected Translator|null $translator = null;
     protected IRequest $httpRequest;
     protected Closure|null $passwordGenerator;
 
@@ -46,47 +46,32 @@ class PasswordRecovery
         $this->httpRequest = $httpRequest;
     }
 
-    /**
-     * @return string
-     */
-    public function getEmptyPasswordMessage()
+    public function getEmptyPasswordMessage(): string
     {
         return $this->emptyPasswordMessage;
     }
 
-    /**
-     * @param string $emptyPasswordMessage
-     */
-    public function setEmptyPasswordMessage($emptyPasswordMessage)
+    public function setEmptyPasswordMessage(string $emptyPasswordMessage)
     {
         $this->emptyPasswordMessage = $emptyPasswordMessage;
     }
 
-    /**
-     * @return int
-     */
-    public function getMinimalPasswordLength()
+    public function getMinimalPasswordLength(): int
     {
         return $this->minimalPasswordLength;
     }
 
-    public function setMinimalPasswordLength($minimalPasswordLength)
+    public function setMinimalPasswordLength(int $minimalPasswordLength): void
     {
-        $this->minimalPasswordLength = (int)$minimalPasswordLength;
+        $this->minimalPasswordLength = $minimalPasswordLength;
     }
 
-    /**
-     * @return int
-     */
-    public function getExpirationTime()
+    public function getExpirationTime(): int
     {
         return $this->expirationTime;
     }
 
-    /**
-     * @param int $expirationTime
-     */
-    public function setExpirationTime($expirationTime)
+    public function setExpirationTime(int $expirationTime)
     {
         if ($expirationTime > 59) {
             $expirationTime = 59;
@@ -94,42 +79,27 @@ class PasswordRecovery
         $this->expirationTime = $expirationTime;
     }
 
-    /**
-     * @return string
-     */
-    public function getEqualPasswordMessage()
+    public function getEqualPasswordMessage(): string
     {
         return $this->equalPasswordMessage;
     }
 
-    /**
-     * @param string $equalPasswordMessage
-     */
-    public function setEqualPasswordMessage($equalPasswordMessage)
+    public function setEqualPasswordMessage(string $equalPasswordMessage)
     {
         $this->equalPasswordMessage = $equalPasswordMessage;
     }
 
-    /**
-     * @param string $validatorMessage
-     */
-    public function setValidatorMessage($validatorMessage)
+    public function setValidatorMessage(string $validatorMessage)
     {
         $this->validatorMessage = $validatorMessage;
     }
 
-    /**
-     * @param string $submitButton
-     */
-    public function setSubmitButton($submitButton)
+    public function setSubmitButton(string $submitButton)
     {
         $this->submitButton = $submitButton;
     }
 
-    /**
-     * @param string $errorMessage
-     */
-    public function setErrorMessage($errorMessage)
+    public function setErrorMessage(string $errorMessage)
     {
         $this->errorMessage = $errorMessage;
     }
@@ -139,84 +109,52 @@ class PasswordRecovery
         $this->translator = $translator;
     }
 
-    /**
-     * @param array $smtp
-     */
-    public function setSmtp(array $smtp)
+    public function setSmtp(array $smtp): void
     {
         $this->smtp = $smtp;
     }
 
-    /**
-     * @param string $templatePath
-     */
     public function setTemplatePath(string $templatePath)
     {
         $this->templatePath = $templatePath;
     }
 
-    /**
-     * @return ResetFormDialog
-     */
-    public function createDialog()
+    public function createDialog(): ResetFormDialog
     {
         return new ResetFormDialog($this);
     }
 
-    /**
-     * @param $email
-     * @param $newPassword
-     * @return true|string
-     */
-    protected function saveNewPassword($email, $newPassword)
+    protected function saveNewPassword(string $email, string $newPassword): void
     {
-        return $this->userRepository->resetPassword($email, $newPassword);
+        $this->userRepository->resetPassword($email, $newPassword);
     }
 
-    /**
-     * @return string
-     */
-    public function getSender()
+    public function getSender(): string
     {
         return $this->sender;
     }
 
-    /**
-     * @return string
-     */
-    public function getSubject()
+    public function getSubject(): string
     {
         return $this->subject;
     }
 
-    /**
-     * @return array|null
-     */
-    public function getSmtp()
+    public function getSmtp(): ?array
     {
         return $this->smtp;
     }
 
-    /**
-     * @return string
-     */
-    public function getValidatorMessage()
+    public function getValidatorMessage(): string
     {
         return $this->validatorMessage;
     }
 
-    /**
-     * @return string
-     */
-    public function getSubmitButton()
+    public function getSubmitButton(): string
     {
         return $this->submitButton;
     }
 
-    /**
-     * @return string
-     */
-    public function getErrorMessage()
+    public function getErrorMessage(): string
     {
         return $this->errorMessage;
     }
@@ -231,23 +169,17 @@ class PasswordRecovery
         return $this->translator;
     }
 
-    public function getPasswordGenerator()
+    public function getPasswordGenerator(): ?Closure
     {
         return $this->passwordGenerator;
     }
 
-    /**
-     * @return UserModelInterface
-     */
-    public function getUserRepository()
+    public function getUserRepository(): UserModelInterface
     {
         return $this->userRepository;
     }
 
-    /**
-     * @return IRequest
-     */
-    public function getHttpRequest()
+    public function getHttpRequest(): IRequest
     {
         return $this->httpRequest;
     }

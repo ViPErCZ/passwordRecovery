@@ -9,7 +9,6 @@ use Nette\DI\CompilerExtension;
 use Nette\Localization\Translator;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
-use Nette\Utils\Validators;
 use Sandbox\PasswordRecovery\PasswordRecovery;
 
 /**
