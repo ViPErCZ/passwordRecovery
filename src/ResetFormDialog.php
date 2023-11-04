@@ -79,7 +79,7 @@ class ResetFormDialog extends Control
     {
         $baseUrl = $this->passwordRecovery->getHttpRequest()->getUrl()->getHostUrl();
         $tokenManager = $this->passwordRecovery->getTokenManager();
-        $token = $tokenManager->token();
+        $token = $tokenManager->token($this->passwordRecovery->getExpirationTime());
         $signal = $this->link("this", ['token' => $token]);
         $this->userRepository->saveToken($email, $token);
 

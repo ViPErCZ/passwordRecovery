@@ -6,7 +6,7 @@ namespace Sandbox\PasswordRecovery;
 
 interface TokenManagerInterface
 {
-    public function token(): string;
+    public function token(int $expiration): string;
 
     public function isValid(string $token): bool;
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sandbox\PasswordRecovery\DI;
 
 use Nette\DI\CompilerExtension;
-use Nette\Localization\Translator;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Sandbox\PasswordRecovery\PasswordRecovery;
@@ -58,19 +57,6 @@ class PasswordRecoveryExtension extends CompilerExtension
 
         if (isset($config['templatePath'])) {
             $passwordRecovery->addSetup('$service->setTemplatePath(?)', [$config['templatePath']]);
-        }
-    }
-
-    public function beforeCompile(): void
-    {
-        $container = $this->getContainerBuilder();
-
-        $translator = $container->getByType(Translator::class);
-        /** @var ServiceDefinition $passwordRecovery */
-        $passwordRecovery = $container->getDefinition($this->prefix(self::PASSWORD_RECOVERY));
-
-        if ($translator) {
-            $passwordRecovery->addSetup('$service->setTranslator(?)', ['@' . $translator]);
         }
     }
 }
