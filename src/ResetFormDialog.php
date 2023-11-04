@@ -115,6 +115,7 @@ class ResetFormDialog extends Control
             ->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
             ->setRequired(true);
         $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
+        $form->addProtection($this->translator->translate($this->errorMessage));
 
         $form->onSuccess[] = function (Form $form) {
             $email = $form->getValues()['email'];
@@ -149,6 +150,7 @@ class ResetFormDialog extends Control
                 , $form['pass1']);
 
         $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
+        $form->addProtection($this->translator->translate($this->errorMessage));
 
         $form->onSuccess[] = function (Form $form) {
             try {

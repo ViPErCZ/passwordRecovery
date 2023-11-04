@@ -6,7 +6,14 @@ Requirements
 
 Sandbox/PasswordRecovery requires PHP 8.1.0 or higher.
 
-- [Nette Framework](https://github.com/nette/nette)
+- "nette/application": "^3.1",
+- "nette/bootstrap": "^3.2",
+- "nette/di": "^3.1",
+- "nette/forms": "^3.1",
+- "nette/mail": "^4.0",
+- "nette/robot-loader": "^4.0",
+- "nette/utils": "^4.0",
+- "latte/latte": "^3.0"
 
 
 Installation
@@ -39,7 +46,7 @@ passwordRecovery:
     minimalPasswordLength: 6
     expirationTime: 45 #minute, max 59
     errorMessage: "Odkaz pro obnovu hesla se nepodařilo odeslat. Zkuste to prosím znovu."
-    smtp: [127.0.0.1, info@domain.tld, password]
+    mailer: @mail.mailer
 ```
 
 Next, you need to register a service that implements an interface IUserModel.
