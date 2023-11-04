@@ -15,7 +15,6 @@ use Nette\Mail\Mailer;
  */
 class PasswordRecovery
 {
-    protected Translator|null $translator = null;
     protected string $validatorMessage;
     protected string $equalPasswordMessage;
     protected string $emptyPasswordMessage;
@@ -31,7 +30,8 @@ class PasswordRecovery
         protected readonly string $sender,
         protected readonly string $subject,
         protected readonly UserRepositoryInterface $userRepository,
-        protected readonly IRequest $httpRequest
+        protected readonly IRequest $httpRequest,
+        protected readonly ?Translator $translator = null
     ) {
     }
 
@@ -91,11 +91,6 @@ class PasswordRecovery
     public function setErrorMessage(string $errorMessage)
     {
         $this->errorMessage = $errorMessage;
-    }
-
-    public function setTranslator(Translator $translator)
-    {
-        $this->translator = $translator;
     }
 
     public function setTemplatePath(string $templatePath)
