@@ -4,7 +4,7 @@
 Requirements
 ------------
 
-Sandbox/PasswordRecovery requires PHP 5.4.0 or higher.
+Sandbox/PasswordRecovery requires PHP 8.1.0 or higher.
 
 - [Nette Framework](https://github.com/nette/nette)
 
@@ -26,17 +26,7 @@ Then you have to register extension in config.neon.
 extensions:
     passwordRecovery: Sandbox\PasswordRecovery\DI\PasswordRecoveryExtension
 ```
-and configuration section in config.neon (version 1.0.x):
-```php
-passwordRecovery:
-    sender: "sandbox@domain.net"
-    subject: "Obnova hesla"
-    submitButton: "Obnovit heslo"
-    validatorMessage: "Prosím vložte validní heslo."
-    errorMessage: "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu."
-    smtp: [127.0.0.1, info@domain.tld, password]
-```
-and configuration section in config.neon (version 1.1.x):
+and configuration section in config.neon:
 ```php
 passwordRecovery:
     passwordRecovery:
@@ -57,47 +47,7 @@ Example is sandbox project: [https://github.com/ViPErCZ/sandbox](https://github.
 
 Usage
 ------------
-Sample using in Presenter (version 1.0.x):
-```php
-use Nette\Application\UI\Form;
-use Sandbox\PasswordRecovery\PasswordRecovery;
-
-/**
- * Class PassRestorePresenter
- * @package App
- */
-class PassRestorePresenter {
-
-	/** @var PasswordRecovery */
-	protected $passwordRecovery;
-
-	/**
-	 * @param PasswordRecovery $passwordRecovery
-	 */
-	public function injectPasswordRecovery(PasswordRecovery $passwordRecovery) {
-		$this->passwordRecovery = $passwordRecovery;
-	}
-
-	/**
-	 * @return \Nette\Application\UI\Form
-	 */
-	protected function createComponentRecoveryForm() {
-		$form = $this->passwordRecovery->createForm();
-
-		$form->onSuccess[] = function(Form $form) {
-			$this->flashMessage('Heslo bylo odesláno na Váš email ' . $form->getValues()['email'] . ".");
-			$this->redrawControl('recoveryForm');
-		};
-
-		$form->onError[] = function() {
-			$this->redrawControl('recoveryForm');
-		};
-
-		return $form;
-	}
-}
-```
-or version 1.1.x and high
+Sample using in Presenter:
 ```php
 /**
  * @return \Nette\Application\UI\Form
@@ -133,29 +83,7 @@ protected function createComponentRecovery() {
 	return $control;
 }
 ```
-and template (version 1.0.x)
-```php
-{snippet recoveryForm}
-		<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
-			{if count($flashes) == 0}
-				{form recoveryForm role => "form"}
-				{if $form->hasErrors()}
-					<div n:foreach="$form->errors as $error" class="alert alert-danger">{$error}</div>
-				{/if}
-				<div class="row form-group">
-					<div class="col-xs-12">
-						{label email /}
-						{input email class => "form-control", placeholder => "Email..."}
-					</div>
-				</div>
-				<div class="row form-group col-lg-10">
-					{input recover class => "btn btn-success"}
-				</div>
-				{/form}
-			{/if}
-	{/snippet}
-```
-and template in version 1.1.x and high has default template (using twitter bootstrap class)
+and template has default template (using twitter bootstrap class)
 ```php
 {snippet recoveryForm}
 	<div n:foreach="$flashes as $flash" class="alert alert-success">{$flash->message}</div>
@@ -164,6 +92,8 @@ and template in version 1.1.x and high has default template (using twitter boots
 	{/if}
 {/snippet}
 ```
+If you want to use your custom template, set the variable **templatePath** to the path to the latte template.
+
 Extension using Nette\Localization\Translator and all configurated strings are translated.
 
 -----
