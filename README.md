@@ -47,9 +47,10 @@ passwordRecovery:
     expirationTime: 45 #minute, max 59
     errorMessage: "Odkaz pro obnovu hesla se nepodařilo odeslat. Zkuste to prosím znovu."
     mailer: @mail.mailer
+    token: @Sandbox\PasswordRecovery\TokenManagerInterface
 ```
 
-Next, you need to register a service that implements an interface IUserModel.
+Next, you need to register a service that implements an interface UserRepositoryInterface and TokenManagerInterface.
 Example is sandbox project: [https://github.com/ViPErCZ/sandbox](https://github.com/ViPErCZ/sandbox)
 
 Usage
