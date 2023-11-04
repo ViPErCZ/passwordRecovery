@@ -10,9 +10,7 @@ use Nette\Application\UI\Form;
 use Nette\Localization\Translator;
 use Nette\Mail\Mailer;
 use Nette\Mail\Message;
-use Nette\Utils\Random;
 use Nette\Application\Attributes\Persistent;
-use Sandbox\PasswordRecovery\DTO\Smtp;
 
 /**
  * Class ResetFormDialog
@@ -22,7 +20,7 @@ use Sandbox\PasswordRecovery\DTO\Smtp;
  */
 class ResetFormDialog extends Control
 {
-    protected UserModelInterface $userRepository;
+    protected UserRepositoryInterface $userRepository;
     protected string $sender;
     protected string $subject;
     protected Mailer $mailer;
@@ -80,7 +78,8 @@ class ResetFormDialog extends Control
     protected function generateResetUrl(string $email): string
     {
         $baseUrl = $this->passwordRecovery->getHttpRequest()->getUrl()->getHostUrl();
-        $token = Random::generate(24);
+        $tokenManager = $this->passwordRecovery->getTokenManager();
+        $token = $tokenManager->token();
         $signal = $this->link("this", ['token' => $token]);
         $this->userRepository->saveToken($email, $token);
 
@@ -100,7 +99,9 @@ class ResetFormDialog extends Control
     public function isTokenValid(): bool
     {
         if ($this->token) {
-            return $this->userRepository->isTokenValid($this->token, $this->passwordRecovery->getExpirationTime());
+            $tokenManager = $this->passwordRecovery->getTokenManager();
+
+            return $tokenManager->isValid($this->token);
         }
 
         return false;
@@ -119,7 +120,7 @@ class ResetFormDialog extends Control
 
         $form->onSuccess[] = function (Form $form) {
             $email = $form->getValues()['email'];
-            if ($this->userRepository->isUserValid($email)) {
+            if ($this->userRepository->hasUser($email)) {
                 try {
                     $this->sendResetLinkToEmail($email);
                 } catch (\Exception $e) {
@@ -154,7 +155,9 @@ class ResetFormDialog extends Control
 
         $form->onSuccess[] = function (Form $form) {
             try {
-                $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
+                if ($this->isTokenValid()) {
+                    $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
+                }
             } catch (\Exception $exception) {
                 $form->addError($exception->getMessage());
             }

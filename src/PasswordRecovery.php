@@ -15,9 +15,7 @@ use Nette\Mail\Mailer;
  */
 class PasswordRecovery
 {
-    protected Mailer|null $mailer = null;
     protected Translator|null $translator = null;
-    protected Closure|null $passwordGenerator = null;
     protected string $validatorMessage;
     protected string $equalPasswordMessage;
     protected string $emptyPasswordMessage;
@@ -28,10 +26,12 @@ class PasswordRecovery
     protected string|null $templatePath = null;
 
     public function __construct(
-        protected string $sender,
-        protected string $subject,
-        protected UserModelInterface $userRepository,
-        protected IRequest $httpRequest
+        protected readonly Mailer $mailer,
+        protected readonly TokenManagerInterface $tokenManager,
+        protected readonly string $sender,
+        protected readonly string $subject,
+        protected readonly UserRepositoryInterface $userRepository,
+        protected readonly IRequest $httpRequest
     ) {
     }
 
@@ -98,11 +98,6 @@ class PasswordRecovery
         $this->translator = $translator;
     }
 
-    public function setMailer(Mailer $mailer): void
-    {
-        $this->mailer = $mailer;
-    }
-
     public function setTemplatePath(string $templatePath)
     {
         $this->templatePath = $templatePath;
@@ -158,12 +153,7 @@ class PasswordRecovery
         return $this->translator;
     }
 
-    public function getPasswordGenerator(): ?Closure
-    {
-        return $this->passwordGenerator;
-    }
-
-    public function getUserRepository(): UserModelInterface
+    public function getUserRepository(): UserRepositoryInterface
     {
         return $this->userRepository;
     }
@@ -171,5 +161,10 @@ class PasswordRecovery
     public function getHttpRequest(): IRequest
     {
         return $this->httpRequest;
+    }
+
+    public function getTokenManager(): TokenManagerInterface
+    {
+        return $this->tokenManager;
     }
 }

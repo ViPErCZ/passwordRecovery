@@ -34,6 +34,7 @@ class PasswordRecoveryExtension extends CompilerExtension
             'emptyPasswordMessage'  => Expect::string()->required()->default('Heslo musí osabhovat alespoň %d znaků'),
             'minimalPasswordLength' => Expect::int(6)->required(),
             'expirationTime'        => Expect::int(10)->required(),
+            'token'                 => Expect::string(),
         ]);
     }
 
@@ -45,7 +46,7 @@ class PasswordRecoveryExtension extends CompilerExtension
         $passwordRecovery = $builder->addDefinition($this->prefix(self::PASSWORD_RECOVERY))
             ->setType(PasswordRecovery::class)
             ->setFactory(PasswordRecovery::class)
-            ->setArguments([$config['sender'], $config['subject']])
+            ->setArguments([$config['mailer'], $config['token'], $config['sender'], $config['subject']])
             ->addSetup('$service->setValidatorMessage(?)', [$config['validatorMessage']])
             ->addSetup('$service->setSubmitButton(?)', [$config['submitButton']])
             ->addSetup('$service->setErrorMessage(?)', [$config['errorMessage']])
@@ -54,8 +55,6 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->addSetup('$service->setMinimalPasswordLength(?)', [$config['minimalPasswordLength']])
             ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
             ->setAutowired();
-
-        $passwordRecovery->addSetup('$service->setMailer(?)', [$config['mailer']]);
 
         if (isset($config['templatePath'])) {
             $passwordRecovery->addSetup('$service->setTemplatePath(?)', [$config['templatePath']]);
