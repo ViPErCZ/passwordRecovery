@@ -8,6 +8,7 @@ use Latte\Engine;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Localization\Translator;
+use Nette\Mail\Mailer;
 use Nette\Mail\Message;
 use Nette\Utils\Random;
 use Nette\Application\Attributes\Persistent;
