@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sandbox\PasswordRecovery\DI;
 
-use Nette\Configurator;
 use Nette\DI\CompilerExtension;
 use Nette\Localization\Translator;
 use Nette\Schema\Expect;
@@ -56,9 +55,7 @@ class PasswordRecoveryExtension extends CompilerExtension
             ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
             ->setAutowired();
 
-        if (isset($config['mailer'])) {
-            $passwordRecovery->addSetup('$service->setSmtp(?)', [$config['mailer']]);
-        }
+        $passwordRecovery->addSetup('$service->setMailer(?)', [$config['mailer']]);
 
         if (isset($config['templatePath'])) {
             $passwordRecovery->addSetup('$service->setTemplatePath(?)', [$config['templatePath']]);

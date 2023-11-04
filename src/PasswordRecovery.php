@@ -6,8 +6,7 @@ namespace Sandbox\PasswordRecovery;
 
 use Nette\Http\IRequest;
 use Nette\Localization\Translator;
-use Sandbox\PasswordRecovery\DTO\Smtp;
-
+use Nette\Mail\Mailer;
 /**
  * Class PasswordRecovery
  *
@@ -16,7 +15,7 @@ use Sandbox\PasswordRecovery\DTO\Smtp;
  */
 class PasswordRecovery
 {
-    protected Smtp|null $smtp = null;
+    protected Mailer|null $mailer = null;
     protected Translator|null $translator = null;
     protected Closure|null $passwordGenerator = null;
     protected string $validatorMessage;
@@ -99,9 +98,9 @@ class PasswordRecovery
         $this->translator = $translator;
     }
 
-    public function setSmtp(Smtp $smtp): void
+    public function setMailer(Mailer $mailer): void
     {
-        $this->smtp = $smtp;
+        $this->mailer = $mailer;
     }
 
     public function setTemplatePath(string $templatePath)
@@ -129,9 +128,9 @@ class PasswordRecovery
         return $this->subject;
     }
 
-    public function getSmtp(): ?Smtp
+    public function getMailer(): Mailer
     {
-        return $this->smtp;
+        return $this->mailer;
     }
 
     public function getValidatorMessage(): string

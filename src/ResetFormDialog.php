@@ -9,8 +9,6 @@ use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Localization\Translator;
 use Nette\Mail\Message;
-use Nette\Mail\SendmailMailer;
-use Nette\Mail\SmtpMailer;
 use Nette\Utils\Random;
 use Nette\Application\Attributes\Persistent;
 use Sandbox\PasswordRecovery\DTO\Smtp;
@@ -26,7 +24,7 @@ class ResetFormDialog extends Control
     protected UserModelInterface $userRepository;
     protected string $sender;
     protected string $subject;
-    protected Smtp|null $smtp = null;
+    protected Mailer $mailer;
     protected string $validatorMessage;
     protected string $submitButton;
     protected string $errorMessage;
@@ -44,7 +42,7 @@ class ResetFormDialog extends Control
         $this->submitButton = $passwordRecovery->getSubmitButton();
         $this->sender = $passwordRecovery->getSender();
         $this->templatePath = $passwordRecovery->getTemplatePath();
-        $this->smtp = $passwordRecovery->getSmtp();
+        $this->mailer = $passwordRecovery->getMailer();
         $this->subject = $passwordRecovery->getSubject();
         $this->userRepository = $passwordRecovery->getUserRepository();
         $this->errorMessage = $passwordRecovery->getErrorMessage();
@@ -75,13 +73,7 @@ class ResetFormDialog extends Control
             $message->setBody("Odkaz pro reset hesla: " . $this->generateResetUrl($email));
         }
 
-        $mailer = $this->smtp ? new SmtpMailer(
-            $this->smtp->host,
-            $this->smtp->email,
-            $this->smtp->password,
-            $this->smtp->encryption
-        ) : new SendmailMailer();
-        $mailer->send($message);
+        $this->mailer->send($message);
     }
 
     protected function generateResetUrl(string $email): string
@@ -118,7 +110,7 @@ class ResetFormDialog extends Control
         $form = new Form();
 
         $form->getElementPrototype()->class = "ajax";
-        $form->addText("email", "Email:")->setAttribute("placeholder", "Email...")
+        $form->addText("email", "Email:")->setHtmlAttribute("placeholder", "Email...")
             ->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
             ->setRequired(true);
         $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
