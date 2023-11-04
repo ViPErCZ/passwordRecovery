@@ -1,92 +1,76 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: viper
- * Date: 17.1.16
- * Time: 7:37
- */
+
+declare(strict_types=1);
 
 namespace Sandbox\PasswordRecovery\DI;
 
-use Nette\Configurator;
-use Nette\DI\Compiler;
 use Nette\DI\CompilerExtension;
-use Nette\Utils\Validators;
+use Nette\Localization\Translator;
+use Nette\Schema\Expect;
+use Nette\Schema\Schema;
+use Sandbox\PasswordRecovery\PasswordRecovery;
 
 /**
  * Class PasswordRecoveryExtension
+ *
  * @package Nextras\PasswordRecovery\DI
- * @author Martin Chudoba <martin.chudoba@seznam.cz>
+ * @author  Martin Chudoba <martin.chudoba@seznam.cz>
  */
-class PasswordRecoveryExtension extends CompilerExtension {
+class PasswordRecoveryExtension extends CompilerExtension
+{
+    private const PASSWORD_RECOVERY = 'passwordRecovery';
 
-	/** @var array */
-	public $defaults = array(
-		"sender" 				=> null,
-		"subject"				=> null,
-		"smtp"					=> null,
-		"templatePath"			=> null,
-		"validatorMessage"		=> "Prosím vložte validní heslo.",
-		"submitButton"			=> "Obnovit heslo",
-		"errorMessage"			=> "Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu.",
-		"equalPasswordMessage"	=> "Hesla se musí shodovat.",
-		"emptyPasswordMessage"	=> "Heslo musí osabhovat alespoň %d znaků",
-		"minimalPasswordLength"	=> 6,
-		"expirationTime"		=> 10
-	);
+    public function getConfigSchema(): Schema
+    {
+        return Expect::structure([
+            'sender'                => Expect::string()->required(),
+            'subject'               => Expect::string()->required(),
+            'mailer'                => Expect::string()->required(),
+            'templatePath'          => Expect::string(),
+            'validatorMessage'      => Expect::string()->required()->default('Prosím vložte validní heslo.'),
+            'submitButton'          => Expect::string()->required()->default('Obnovit heslo'),
+            'errorMessage'          => Expect::string()->required()->default('Nové heslo se nepodařilo odeslat. Zkuste to prosím znovu.'),
+            'equalPasswordMessage'  => Expect::string()->required()->default('Hesla se musí shodovat.'),
+            'emptyPasswordMessage'  => Expect::string()->required()->default('Heslo musí osabhovat alespoň %d znaků'),
+            'minimalPasswordLength' => Expect::int(6)->required(),
+            'expirationTime'        => Expect::int(10)->required(),
+            'token'                 => Expect::string(),
+        ]);
+    }
 
-	/**
-	 * @throws \Nette\Utils\AssertionException
-	 */
-	public function loadConfiguration() {
-		$builder = $this->getContainerBuilder();
-		$config = $this->getConfig($this->defaults);
+    public function loadConfiguration(): void
+    {
+        $builder = $this->getContainerBuilder();
+        $config = (array)$this->getConfig();
 
-		Validators::assert($config['sender'], 'string', 'Password recovery sender email');
-		Validators::assert($config['subject'], 'string', 'Password recovery subject email');
+        $passwordRecovery = $builder->addDefinition($this->prefix(self::PASSWORD_RECOVERY))
+            ->setType(PasswordRecovery::class)
+            ->setFactory(PasswordRecovery::class)
+            ->setArguments([$config['mailer'], $config['token'], $config['sender'], $config['subject']])
+            ->addSetup('$service->setValidatorMessage(?)', [$config['validatorMessage']])
+            ->addSetup('$service->setSubmitButton(?)', [$config['submitButton']])
+            ->addSetup('$service->setErrorMessage(?)', [$config['errorMessage']])
+            ->addSetup('$service->setEqualPasswordMessage(?)', [$config['equalPasswordMessage']])
+            ->addSetup('$service->setEmptyPasswordMessage(?)', [$config['emptyPasswordMessage']])
+            ->addSetup('$service->setMinimalPasswordLength(?)', [$config['minimalPasswordLength']])
+            ->addSetup('$service->setExpirationTime(?)', [$config['expirationTime']])
+            ->setAutowired();
 
-		$passwordRecovery = $builder->addDefinition($this->prefix('passwordRecovery'))
-			->setClass('Sandbox\PasswordRecovery\PasswordRecovery')
-			->setArguments(array($config['sender'], $config['subject']))
-			->addSetup('$service->setValidatorMessage(?)', array($config['validatorMessage']))
-			->addSetup('$service->setSubmitButton(?)', array($config['submitButton']))
-			->addSetup('$service->setErrorMessage(?)', array($config['errorMessage']))
-			->addSetup('$service->setEqualPasswordMessage(?)', array($config['equalPasswordMessage']))
-			->addSetup('$service->setEmptyPasswordMessage(?)', array($config['emptyPasswordMessage']))
-			->addSetup('$service->setMinimalPasswordLength(?)', array($config['minimalPasswordLength']))
-			->addSetup('$service->setExpirationTime(?)', array($config['expirationTime']))
-			->setInject(false);
+        if (isset($config['templatePath'])) {
+            $passwordRecovery->addSetup('$service->setTemplatePath(?)', [$config['templatePath']]);
+        }
+    }
 
-		if (isset($config['smtp']) && is_array($config['smtp'])) {
-			$passwordRecovery->addSetup('$service->setSmtp(?)', array($config['smtp']));
-		}
+    public function beforeCompile(): void
+    {
+        $container = $this->getContainerBuilder();
 
-		if (isset($config['templatePath']) && is_array($config['templatePath'])) {
-			$passwordRecovery->addSetup('$service->setTemplatePath(?)', array($config['templatePath']));
-		}
-	}
+        $translator = $container->getByType(Translator::class);
+        /** @var ServiceDefinition $passwordRecovery */
+        $passwordRecovery = $container->getDefinition($this->prefix(self::PASSWORD_RECOVERY));
 
-	/**
-	 *
-	 */
-	public function beforeCompile() {
-		$container = $this->getContainerBuilder();
-
-		$translator = $container->getByType('Nette\Localization\ITranslator');
-		$passwordRecovery = $container->getDefinition($this->prefix('passwordRecovery'));
-
-		if ($translator) {
-			$passwordRecovery->addSetup('$service->setTranslator(?)', array('@' . $translator));
-		}
-	}
-
-
-	/**
-	 * @param Configurator $configurator
-	 */
-	public static function register(Configurator $configurator) {
-		$configurator->onCompile[] = function ($config, Compiler $compiler) {
-			$compiler->addExtension('passwordRecovery', new PasswordRecoveryExtension());
-		};
-	}
+        if ($translator) {
+            $passwordRecovery->addSetup('$service->setTranslator(?)', ['@' . $translator]);
+        }
+    }
 }

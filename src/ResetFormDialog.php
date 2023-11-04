@@ -1,219 +1,168 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: viper
- * Date: 22.2.16
- * Time: 13:51
- */
+
+declare(strict_types=1);
 
 namespace Sandbox\PasswordRecovery;
 
 use Latte\Engine;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
+use Nette\Mail\Mailer;
 use Nette\Mail\Message;
-use Nette\Mail\SendmailMailer;
-use Nette\Mail\SmtpMailer;
-use Nette\Utils\Random;
+use Nette\Application\Attributes\Persistent;
 
 /**
  * Class ResetFormDialog
+ *
  * @package Sandbox\PasswordRecovery
- * @author Martin Chudoba <martin.chudoba@seznam.cz>
+ * @author  Martin Chudoba <martin.chudoba@seznam.cz>
  */
-class ResetFormDialog extends Control {
+class ResetFormDialog extends Control
+{
+    protected UserRepositoryInterface $userRepository;
+    protected string $sender;
+    protected string $subject;
+    protected Mailer $mailer;
+    protected string $validatorMessage;
+    protected string $submitButton;
+    protected string $errorMessage;
+    protected string|null $templatePath = null;
+    protected Translator|null $translator = null;
 
-	/** @var PasswordRecovery */
-	protected $passwordRecovery;
+    #[Persistent]
+    public string $token = '';
 
-	/** @var IUserModel */
-	protected $userRepository;
+    public function __construct(
+        protected readonly PasswordRecovery $passwordRecovery
+    ) {
+        $this->translator = $passwordRecovery->getTranslator();
+        $this->validatorMessage = $passwordRecovery->getValidatorMessage();
+        $this->submitButton = $passwordRecovery->getSubmitButton();
+        $this->sender = $passwordRecovery->getSender();
+        $this->templatePath = $passwordRecovery->getTemplatePath();
+        $this->mailer = $passwordRecovery->getMailer();
+        $this->subject = $passwordRecovery->getSubject();
+        $this->userRepository = $passwordRecovery->getUserRepository();
+        $this->errorMessage = $passwordRecovery->getErrorMessage();
+    }
 
-	/** @var string */
-	protected $sender;
+    public function render(): void
+    {
+        $template = $this->getTemplate();
+        $template->setFile(__DIR__ . "/template/default.latte");
 
-	/** @var string */
-	protected $subject;
+        $template->render();
+    }
 
-	/** @var null|array */
-	protected $smtp;
+    protected function sendResetLinkToEmail(string $email): void
+    {
+        $message = new Message();
+        $message->setFrom($this->sender);
+        $message->setSubject($this->subject);
+        $message->addTo($email);
 
-	/** @var string */
-	protected $validatorMessage;
+        if (null !== $this->templatePath && is_file($this->templatePath)) {
+            $latte = new Engine();
+            $params = [
+                'url' => $this->generateResetUrl($email)
+            ];
+            $message->setHtmlBody($latte->renderToString($this->templatePath, $params));
+        } else {
+            $message->setBody("Odkaz pro reset hesla: " . $this->generateResetUrl($email));
+        }
 
-	/** @var string */
-	protected $submitButton;
+        $this->mailer->send($message);
+    }
 
-	/** @var string */
-	protected $errorMessage;
+    protected function generateResetUrl(string $email): string
+    {
+        $baseUrl = $this->passwordRecovery->getHttpRequest()->getUrl()->getHostUrl();
+        $tokenManager = $this->passwordRecovery->getTokenManager();
+        $token = $tokenManager->token();
+        $signal = $this->link("this", ['token' => $token]);
+        $this->userRepository->saveToken($email, $token);
 
-	/** @var string */
-	protected $templatePath;
+        return $baseUrl . $signal;
+    }
 
-	/** @var ITranslator */
-	protected $translator;
+    public function getResetForm(): Form
+    {
+        return $this['resetForm'];
+    }
 
-	/**
-	 * @var string
-	 * @persistent
-	 */
-	public $token;
+    public function getNewPasswordForm(): Form
+    {
+        return $this['newPasswordForm'];
+    }
 
-	/**
-	 * ResetFormDialog constructor.
-	 * @param $passwordRecovery
-	 */
-	public function __construct(PasswordRecovery $passwordRecovery) {
-		$this->passwordRecovery = $passwordRecovery;
-		$this->translator = $passwordRecovery->getTranslator();
-		$this->validatorMessage = $passwordRecovery->getValidatorMessage();
-		$this->submitButton = $passwordRecovery->getSubmitButton();
-		$this->sender = $passwordRecovery->getSender();
-		$this->templatePath = $passwordRecovery->getTemplatePath();
-		$this->smtp = $passwordRecovery->getSmtp();
-		$this->subject = $passwordRecovery->getSubject();
-		$this->userRepository = $passwordRecovery->getUserRepository();
-		$this->errorMessage = $passwordRecovery->getErrorMessage();
-	}
+    public function isTokenValid(): bool
+    {
+        if ($this->token) {
+            $tokenManager = $this->passwordRecovery->getTokenManager();
 
-	/**
-	 *
-	 */
-	public function render() {
-		$template = $this->getTemplate();
-		$template->setFile(__DIR__ . "/template/default.latte");
+            return $tokenManager->isValid($this->token);
+        }
 
-		$template->render();
-	}
+        return false;
+    }
 
-	/**
-	 * @param $email
-	 * @throws \Exception
-	 * @throws \Throwable
-	 */
-	protected function sendResetLinkToEmail($email) {
-		$message = new Message();
-		$message->setFrom($this->sender);
-		$message->setSubject($this->subject);
-		$message->addTo($email);
+    protected function createComponentResetForm(): Form
+    {
+        $form = new Form();
 
-		if (is_file($this->templatePath)) {
-			$latte = new Engine();
-			$params = array(
-				'url' => $this->generateResetUrl($email)
-			);
-			$message->setHtmlBody($latte->renderToString($this->templatePath, $params));
-		} else {
-			$message->setBody("Odkaz pro reset hesla: " . $this->generateResetUrl($email));
-		}
+        $form->getElementPrototype()->class = "ajax";
+        $form->addText("email", "Email:")->setHtmlAttribute("placeholder", "Email...")
+            ->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
+            ->setRequired(true);
+        $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
+        $form->addProtection($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
 
-		if ($this->smtp) {
-			$mailer = new SmtpMailer(array(
-				'host' => $this->smtp[0],
-				'username' => $this->smtp[1],
-				'password' => $this->smtp[2],
-				'secure' => isset($this->smtp[3]) ? $this->smtp[3] : '',
-			));
-			$mailer->send($message);
-		} else {
-			$mailer = new SendmailMailer();
-			$mailer->send($message);
-		}
-	}
+        $form->onSuccess[] = function (Form $form) {
+            $email = $form->getValues()['email'];
+            if ($this->userRepository->hasUser($email)) {
+                try {
+                    $this->sendResetLinkToEmail($email);
+                } catch (\Exception $e) {
+                    $form->addError($e->getMessage());
+                }
+            } else {
+                $form->addError($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
+            }
+        };
 
-	/**
-	 * @param $email
-	 * @return string
-	 */
-	protected function generateResetUrl($email) {
-		$baseUrl = $this->passwordRecovery->getHttpRequest()->getUrl()->getHostUrl();
-		$token = Random::generate(24);
-		$signal = $this->link("this", array('token' => $token));
-		$this->userRepository->saveToken($email, $token);
+        return $form;
+    }
 
-		return $baseUrl . $signal;
-	}
+    protected function createComponentNewPasswordForm(): Form
+    {
+        $form = new Form();
 
-	/**
-	 * @return Form
-	 */
-	public function getResetForm() {
-		return $this['resetForm'];
-	}
+        $required = sprintf($this->passwordRecovery->getEmptyPasswordMessage(), $this->passwordRecovery->getMinimalPasswordLength());
+        $form->addPassword("pass1", $this->translator ? $this->translator->translate("Nové heslo") : "Nové heslo:")
+            ->setRequired($this->translator ? $this->translator->translate($required) : $required)
+            ->addRule(Form::MIN_LENGTH, $this->translator ? $this->translator->translate($required) : $required,
+                $this->passwordRecovery->getMinimalPasswordLength());
+        $form->addPassword("pass2", $this->translator ? $this->translator->translate("Heslo pro kontrolu") : "Heslo pro kontrolu:")
+            ->setRequired(true)
+            ->addRule(Form::EQUAL
+                ,
+                $this->translator ? $this->translator->translate($this->passwordRecovery->getEqualPasswordMessage()) : $this->passwordRecovery->getEqualPasswordMessage()
+                , $form['pass1']);
 
-	/**
-	 * @return Form
-	 */
-	public function getNewPasswordForm() {
-		return $this['newPasswordForm'];
-	}
+        $form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
+        $form->addProtection($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
 
-	/**
-	 * @return bool
-	 */
-	public function isTokenValid() {
-		if ($this->token) {
-			return $this->userRepository->isTokenValid($this->token, $this->passwordRecovery->getExpirationTime());
-		} else {
-			return false;
-		}
-	}
+        $form->onSuccess[] = function (Form $form) {
+            try {
+                if ($this->isTokenValid()) {
+                    $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
+                }
+            } catch (\Exception $exception) {
+                $form->addError($exception->getMessage());
+            }
+        };
 
-	/**
-	 * @return Form
-	 */
-	protected function createComponentResetForm() {
-		$form = new Form();
-
-		$form->getElementPrototype()->class = "ajax";
-		$form->addText("email", "Email:")->setAttribute("placeholder", "Email...")
-			->addRule(Form::EMAIL, $this->translator ? $this->translator->translate($this->validatorMessage) : $this->validatorMessage)
-			->setRequired(true);
-		$form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
-
-		$form->onSuccess[] = function(Form $form) {
-			$email = $form->getValues()['email'];
-			if ($this->userRepository->isUserValid($email)) {
-				try {
-					$this->sendResetLinkToEmail($email);
-				} catch (\Exception $e) {
-					$form->addError($e->getMessage());
-				}
-			} else {
-				$form->addError($this->translator ? $this->translator->translate($this->errorMessage) : $this->errorMessage);
-			}
-
-		};
-
-		return $form;
-	}
-
-	/**
-	 * @return Form
-	 */
-	protected function createComponentNewPasswordForm() {
-		$form = new Form();
-
-		$required = sprintf($this->passwordRecovery->getEmptyPasswordMessage(), $this->passwordRecovery->getMinimalPasswordLength());
-		$form->addPassword("pass1", $this->translator ? $this->translator->translate("Nové heslo") : "Nové heslo:")
-			->setRequired($this->translator ? $this->translator->translate($required) : $required)
-			->addRule(Form::MIN_LENGTH, $this->translator ? $this->translator->translate($required) : $required, $this->passwordRecovery->getMinimalPasswordLength());
-		$form->addPassword("pass2", $this->translator ? $this->translator->translate("Heslo pro kontrolu") : "Heslo pro kontrolu:")
-			->setRequired(true)
-			->addRule(Form::EQUAL
-				, $this->translator ? $this->translator->translate($this->passwordRecovery->getEqualPasswordMessage()) : $this->passwordRecovery->getEqualPasswordMessage()
-				, $form['pass1']);
-
-		$form->addSubmit("recover", $this->translator ? $this->translator->translate($this->submitButton) : $this->submitButton);
-
-		$form->onSuccess[] = function(Form $form) {
-			$result = $this->userRepository->resetPassword($this->token, $form->getValues()['pass1']);
-			if ($result !== true) {
-				$form->addError($result);
-			}
-		};
-
-		return $form;
-	}
+        return $form;
+    }
 }

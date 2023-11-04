@@ -1,272 +1,170 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: viper
- * Date: 17.1.16
- * Time: 7:54
- */
+
+declare(strict_types=1);
 
 namespace Sandbox\PasswordRecovery;
-use Nette\Http\IRequest;
-use Nette\Localization\ITranslator;
 
+use Nette\Http\IRequest;
+use Nette\Localization\Translator;
+use Nette\Mail\Mailer;
 /**
  * Class PasswordRecovery
+ *
  * @package Nextras\PasswordRecovery
- * @author Martin Chudoba <martin.chudoba@seznam.cz>
+ * @author  Martin Chudoba <martin.chudoba@seznam.cz>
  */
-class PasswordRecovery {
+class PasswordRecovery
+{
+    protected Translator|null $translator = null;
+    protected string $validatorMessage;
+    protected string $equalPasswordMessage;
+    protected string $emptyPasswordMessage;
+    protected int $minimalPasswordLength;
+    protected int $expirationTime;
+    protected string $submitButton;
+    protected string $errorMessage;
+    protected string|null $templatePath = null;
 
-	/** @var IUserModel */
-	protected $userRepository;
+    public function __construct(
+        protected readonly Mailer $mailer,
+        protected readonly TokenManagerInterface $tokenManager,
+        protected readonly string $sender,
+        protected readonly string $subject,
+        protected readonly UserRepositoryInterface $userRepository,
+        protected readonly IRequest $httpRequest
+    ) {
+    }
 
-	/** @var string */
-	protected $sender;
+    public function getEmptyPasswordMessage(): string
+    {
+        return $this->emptyPasswordMessage;
+    }
 
-	/** @var string */
-	protected $subject;
+    public function setEmptyPasswordMessage(string $emptyPasswordMessage)
+    {
+        $this->emptyPasswordMessage = $emptyPasswordMessage;
+    }
 
-	/** @var null|array */
-	protected $smtp;
+    public function getMinimalPasswordLength(): int
+    {
+        return $this->minimalPasswordLength;
+    }
 
-	/** @var string */
-	protected $validatorMessage;
+    public function setMinimalPasswordLength(int $minimalPasswordLength): void
+    {
+        $this->minimalPasswordLength = $minimalPasswordLength;
+    }
 
-	/** @var string */
-	protected $equalPasswordMessage;
+    public function getExpirationTime(): int
+    {
+        return $this->expirationTime;
+    }
 
-	/** @var string */
-	protected $emptyPasswordMessage;
+    public function setExpirationTime(int $expirationTime)
+    {
+        if ($expirationTime > 59) {
+            $expirationTime = 59;
+        }
+        $this->expirationTime = $expirationTime;
+    }
 
-	/** @var integer */
-	protected $minimalPasswordLength;
+    public function getEqualPasswordMessage(): string
+    {
+        return $this->equalPasswordMessage;
+    }
 
-	/** @var integer */
-	protected $expirationTime;
+    public function setEqualPasswordMessage(string $equalPasswordMessage)
+    {
+        $this->equalPasswordMessage = $equalPasswordMessage;
+    }
 
-	/** @var string */
-	protected $submitButton;
+    public function setValidatorMessage(string $validatorMessage)
+    {
+        $this->validatorMessage = $validatorMessage;
+    }
 
-	/** @var string */
-	protected $errorMessage;
+    public function setSubmitButton(string $submitButton)
+    {
+        $this->submitButton = $submitButton;
+    }
 
-	/** @var string */
-	protected $templatePath;
+    public function setErrorMessage(string $errorMessage)
+    {
+        $this->errorMessage = $errorMessage;
+    }
 
-	/** @var ITranslator */
-	protected $translator;
+    public function setTranslator(Translator $translator)
+    {
+        $this->translator = $translator;
+    }
 
-	/** @var IRequest */
-	protected $httpRequest;
+    public function setTemplatePath(string $templatePath)
+    {
+        $this->templatePath = $templatePath;
+    }
 
-	/**
-	 * PasswordRecovery constructor.
-	 * @param $sender
-	 * @param $subject
-	 * @param IUserModel $userRepository
-	 * @param IRequest $httpRequest
-	 */
-	public function __construct($sender, $subject, IUserModel $userRepository, IRequest $httpRequest) {
-		$this->sender = $sender;
-		$this->subject = $subject;
-		$this->smtp = null;
-		$this->passwordGenerator = null;
-		$this->userRepository = $userRepository;
-		$this->httpRequest = $httpRequest;
-	}
+    public function createDialog(): ResetFormDialog
+    {
+        return new ResetFormDialog($this);
+    }
 
-	/**
-	 * @return string
-	 */
-	public function getEmptyPasswordMessage() {
-		return $this->emptyPasswordMessage;
-	}
+    protected function saveNewPassword(string $email, string $newPassword): void
+    {
+        $this->userRepository->resetPassword($email, $newPassword);
+    }
 
-	/**
-	 * @param string $emptyPasswordMessage
-	 */
-	public function setEmptyPasswordMessage($emptyPasswordMessage) {
-		$this->emptyPasswordMessage = $emptyPasswordMessage;
-	}
+    public function getSender(): string
+    {
+        return $this->sender;
+    }
 
-	/**
-	 * @return int
-	 */
-	public function getMinimalPasswordLength() {
-		return intval($this->minimalPasswordLength);
-	}
+    public function getSubject(): string
+    {
+        return $this->subject;
+    }
 
-	/**
-	 * @param int $minimalPasswordLength
-	 */
-	public function setMinimalPasswordLength($minimalPasswordLength) {
-		$this->minimalPasswordLength = intval($minimalPasswordLength);
-	}
+    public function getMailer(): Mailer
+    {
+        return $this->mailer;
+    }
 
-	/**
-	 * @return int
-	 */
-	public function getExpirationTime() {
-		return $this->expirationTime;
-	}
+    public function getValidatorMessage(): string
+    {
+        return $this->validatorMessage;
+    }
 
-	/**
-	 * @param int $expirationTime
-	 */
-	public function setExpirationTime($expirationTime) {
-		if ($expirationTime > 59) {
-			$expirationTime = 59;
-		}
-		$this->expirationTime = $expirationTime;
-	}
+    public function getSubmitButton(): string
+    {
+        return $this->submitButton;
+    }
 
-	/**
-	 * @return string
-	 */
-	public function getEqualPasswordMessage() {
-		return $this->equalPasswordMessage;
-	}
+    public function getErrorMessage(): string
+    {
+        return $this->errorMessage;
+    }
 
-	/**
-	 * @param string $equalPasswordMessage
-	 */
-	public function setEqualPasswordMessage($equalPasswordMessage) {
-		$this->equalPasswordMessage = $equalPasswordMessage;
-	}
+    public function getTemplatePath(): ?string
+    {
+        return $this->templatePath;
+    }
 
-	/**
-	 * @param string $validatorMessage
-	 */
-	public function setValidatorMessage($validatorMessage) {
-		$this->validatorMessage = $validatorMessage;
-	}
+    public function getTranslator(): ?Translator
+    {
+        return $this->translator;
+    }
 
-	/**
-	 * @param string $submitButton
-	 */
-	public function setSubmitButton($submitButton) {
-		$this->submitButton = $submitButton;
-	}
+    public function getUserRepository(): UserRepositoryInterface
+    {
+        return $this->userRepository;
+    }
 
-	/**
-	 * @param string $errorMessage
-	 */
-	public function setErrorMessage($errorMessage) {
-		$this->errorMessage = $errorMessage;
-	}
+    public function getHttpRequest(): IRequest
+    {
+        return $this->httpRequest;
+    }
 
-	/**
-	 * @param ITranslator $translator
-	 */
-	public function setTranslator(ITranslator $translator) {
-		$this->translator = $translator;
-	}
-
-	/**
-	 * @param array $smtp
-	 */
-	public function setSmtp(array $smtp) {
-		$this->smtp = $smtp;
-	}
-
-	/**
-	 * @param string $templatePath
-	 */
-	public function setTemplatePath($templatePath) {
-		$this->templatePath = $templatePath;
-	}
-
-	/**
-	 * @return ResetFormDialog
-	 */
-	public function createDialog() {
-		return new ResetFormDialog($this);
-	}
-
-	/**
-	 * @param $email
-	 * @param $newPassword
-	 * @return true|string
-	 */
-	protected function saveNewPassword($email, $newPassword) {
-		return $this->userRepository->resetPassword($email, $newPassword);
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSender() {
-		return $this->sender;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSubject() {
-		return $this->subject;
-	}
-
-	/**
-	 * @return array|null
-	 */
-	public function getSmtp() {
-		return $this->smtp;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getValidatorMessage() {
-		return $this->validatorMessage;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getSubmitButton() {
-		return $this->submitButton;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getErrorMessage() {
-		return $this->errorMessage;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function getTemplatePath() {
-		return $this->templatePath;
-	}
-
-	/**
-	 * @return ITranslator
-	 */
-	public function getTranslator() {
-		return $this->translator;
-	}
-
-	/**
-	 * @return callable
-	 */
-	public function getPasswordGenerator() {
-		return $this->passwordGenerator;
-	}
-
-	/**
-	 * @return IUserModel
-	 */
-	public function getUserRepository() {
-		return $this->userRepository;
-	}
-
-	/**
-	 * @return IRequest
-	 */
-	public function getHttpRequest() {
-		return $this->httpRequest;
-	}
-
+    public function getTokenManager(): TokenManagerInterface
+    {
+        return $this->tokenManager;
+    }
 }
